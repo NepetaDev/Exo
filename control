@@ -1,0 +1,9 @@
+Package: me.nepeta.exo
+Name: Exo (Beta)
+Depends: mobilesubstrate
+Version: 0.1.0
+Architecture: iphoneos-arm
+Description: Information provider for WKWebView-based widgets.
+Maintainer: Nepeta
+Author: Nepeta
+Section: Tweaks
