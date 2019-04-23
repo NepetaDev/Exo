@@ -93,6 +93,10 @@ window.exo = (() => {
             handler(data);
         }
     }
+    
+    function getTextNodes(element) {
+        return Array.from(element.childNodes).filter(child => child.nodeType === Node.TEXT_NODE);
+    }
 
     let exo = (selector) => {
         let elements = document.querySelectorAll(selector);
@@ -125,13 +129,20 @@ window.exo = (() => {
                     fn();
                 }
 
-                let variables = element.innerText.match(formatRe);
-                if (!variables || variables.length == 0) continue;
+                if (element.tagName == 'SCRIPT' || element.tagName == 'STYLE' || element.tagName == 'NOSCRIPT' || element.tagName == 'IFRAME') continue;
+                
+                let textNodes = getTextNodes(element);
+                if (!textNodes || textNodes.length == 0) continue;
+                
+                for (let textNode of textNodes) {
+                    let variables = textNode.nodeValue.match(formatRe);
+                    if (!variables || variables.length == 0) continue;
 
-                if (!element.exo) element.exo = {};
-                let fn = createContentFunction(element, 'innerText', element.innerText, variables);
-                addTo(boundFunctions, fn, variables);
-                fn();
+                    if (!element.exo) element.exo = {};
+                    let fn = createContentFunction(textNode, 'nodeValue', textNode.nodeValue, variables);
+                    addTo(boundFunctions, fn, variables);
+                    fn();
+                }
             }
         };
 
