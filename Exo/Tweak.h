@@ -30,3 +30,24 @@
 
 
 @end
+
+@interface SBWiFiManager : NSObject
+
+-(BOOL)isPowered;
+-(BOOL)isPrimaryInterface;
+-(id)currentNetworkName;
+-(void)_powerStateDidChange;
+-(void)_linkDidChange;
+-(void)updateDevicePresence;
+-(void)_lock_spawnManagerCallbackThread;
+-(void)_updateWiFiDevice;
+-(void)_runManagerCallbackThread;
+-(void)_updateCurrentNetwork;
+-(void)updateSignalStrength;
+-(void)_updateWiFiState;
+-(void)updateSignalStrengthFromRawRSSI:(int)arg1 andScaledRSSI:(float)arg2 ;
+-(int)signalStrengthRSSI;
+-(void)setWiFiEnabled:(BOOL)arg1 ;
+-(int)signalStrengthBars;
+
+@end

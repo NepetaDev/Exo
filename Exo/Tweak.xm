@@ -172,6 +172,32 @@ void updateChargingStatus(CFNotificationCenterRef center, void *o, CFStringRef n
     }];
 }
 
+%hook SBWiFiManager
+
+-(void)_updateCurrentNetwork {
+    %orig;
+    [[EXOObserver sharedInstance] update:@{
+        @"wifi.network": [self currentNetworkName],
+    }];
+}
+
+-(void)updateSignalStrength {
+    %orig;
+    [[EXOObserver sharedInstance] update:@{
+        @"wifi.strength.current": @([self signalStrengthBars]),
+        @"wifi.strength.rssi": @([self signalStrengthRSSI]),
+    }];
+}
+
+-(void)setWiFiEnabled:(BOOL)arg1 {
+    %orig;
+    [[EXOObserver sharedInstance] update:@{
+        @"wifi.enabled": @(arg1)
+    }];
+}
+
+%end
+
 %hook SBTelephonyManager
 
 -(void)_setSignalStrengthBars:(unsigned long long)arg1 maxBars:(unsigned long long)arg2 inSubscriptionContext:(id)arg3 {
