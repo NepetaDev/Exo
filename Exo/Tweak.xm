@@ -3,6 +3,7 @@
 #import <mach/mach_init.h>
 #import <mach/mach_host.h>
 #import <MediaRemote/MediaRemote.h>
+#import <sys/utsname.h>
 #import "Tweak.h"
 
 @interface EXOObserver : NSObject
@@ -16,6 +17,7 @@
 -(id)init;
 -(void)update:(NSDictionary *)updateData;
 
+-(void)once;
 -(void)dataRequested;
 -(void)postNotification:(NSDictionary *)data;
 
@@ -28,9 +30,7 @@
 
 -(void)updateBattery;
 -(void)updateMemory;
--(void)updateMobile;
--(void)updateWifi;
--(void)updateBluetooth;
+-(void)updateDevice;
 //...
 
 @end
@@ -46,12 +46,17 @@
     dispatch_once(&onceToken, ^{
         sharedInstance = [EXOObserver alloc];
         sharedInstance.data = [NSMutableDictionary new];
+        [sharedInstance once];
     });
     return sharedInstance;
 }
 
 -(id)init {
     return [EXOObserver sharedInstance];
+}
+
+-(void)once {
+    [self updateDevice];
 }
 
 -(void)update:(NSDictionary *)updateData {
@@ -148,16 +153,16 @@
     }];
 }
 
--(void)updateMobile {
+-(void)updateDevice {
+    struct utsname systemInfo;
+    uname(&systemInfo);
+    NSString *type = [NSString stringWithCString:systemInfo.machine encoding:NSUTF8StringEncoding];
 
-}
-
--(void)updateWifi {
-
-}
-
--(void)updateBluetooth {
-
+    [self update:@{
+        @"device.type": type,
+        @"device.name": [[UIDevice currentDevice] name],
+        @"system.version": [UIDevice currentDevice].systemVersion
+    }];
 }
 
 @end
