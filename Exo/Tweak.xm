@@ -185,7 +185,9 @@ bool wifiInitialized = false;
 -(void)_powerStateDidChange {
     %orig;
     [[EXOObserver sharedInstance] update:@{
-        @"wifi.enabled": @([self isPowered])
+        @"wifi.enabled": @([self isPowered]),
+        @"wifi.strength.current": @([self isPowered] ? [self signalStrengthBars] : 0),
+        @"wifi.strength.rssi": @([self isPowered] ? [self signalStrengthRSSI] : 0),
     }];
 }
 
@@ -193,11 +195,14 @@ bool wifiInitialized = false;
     %orig;
     [[EXOObserver sharedInstance] update:@{
         @"wifi.network": [self currentNetworkName] ?: @"",
+        @"wifi.strength.current": @([self currentNetworkName] ? [self signalStrengthBars] : 0),
+        @"wifi.strength.rssi": @([self currentNetworkName] ? [self signalStrengthRSSI] : 0),
     }];
 }
 
 -(void)updateSignalStrengthFromRawRSSI:(int)arg1 andScaledRSSI:(float)arg2 {
     %orig;
+    if (![self isPowered]) return;
     if (time(NULL) - wifiSignalUpdateTime > 10 || (!wifiInitialized && time(NULL) - wifiSignalUpdateTime > 1)) {
         if ([self signalStrengthRSSI] != 0) wifiInitialized = true;
         wifiSignalUpdateTime = time(NULL);
@@ -210,6 +215,7 @@ bool wifiInitialized = false;
 
 -(void)updateSignalStrength {
     %orig;
+    if (![self isPowered]) return;
     if (time(NULL) - wifiSignalUpdateTime > 10) {
         if ([self signalStrengthRSSI] != 0) wifiInitialized = true;
         wifiSignalUpdateTime = time(NULL);
