@@ -177,28 +177,47 @@ void updateChargingStatus(CFNotificationCenterRef center, void *o, CFStringRef n
     }];
 }
 
+unsigned long wifiSignalUpdateTime = 0;
+bool wifiInitialized = false;
+
 %hook SBWiFiManager
+
+-(void)_powerStateDidChange {
+    %orig;
+    [[EXOObserver sharedInstance] update:@{
+        @"wifi.enabled": @([self isPowered])
+    }];
+}
 
 -(void)_updateCurrentNetwork {
     %orig;
     [[EXOObserver sharedInstance] update:@{
-        @"wifi.network": [self currentNetworkName] ?: "",
+        @"wifi.network": [self currentNetworkName] ?: @"",
     }];
+}
+
+-(void)updateSignalStrengthFromRawRSSI:(int)arg1 andScaledRSSI:(float)arg2 {
+    %orig;
+    if (time(NULL) - wifiSignalUpdateTime > 10 || (!wifiInitialized && time(NULL) - wifiSignalUpdateTime > 1)) {
+        if ([self signalStrengthRSSI] != 0) wifiInitialized = true;
+        wifiSignalUpdateTime = time(NULL);
+        [[EXOObserver sharedInstance] update:@{
+            @"wifi.strength.current": @([self signalStrengthBars]),
+            @"wifi.strength.rssi": @([self signalStrengthRSSI]),
+        }];
+    }
 }
 
 -(void)updateSignalStrength {
     %orig;
-    [[EXOObserver sharedInstance] update:@{
-        @"wifi.strength.current": @([self signalStrengthBars]),
-        @"wifi.strength.rssi": @([self signalStrengthRSSI]),
-    }];
-}
-
--(void)setWiFiEnabled:(BOOL)arg1 {
-    %orig;
-    [[EXOObserver sharedInstance] update:@{
-        @"wifi.enabled": @(arg1)
-    }];
+    if (time(NULL) - wifiSignalUpdateTime > 10) {
+        if ([self signalStrengthRSSI] != 0) wifiInitialized = true;
+        wifiSignalUpdateTime = time(NULL);
+        [[EXOObserver sharedInstance] update:@{
+            @"wifi.strength.current": @([self signalStrengthBars]),
+            @"wifi.strength.rssi": @([self signalStrengthRSSI]),
+        }];
+    }
 }
 
 %end

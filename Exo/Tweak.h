@@ -49,5 +49,6 @@
 -(int)signalStrengthRSSI;
 -(void)setWiFiEnabled:(BOOL)arg1 ;
 -(int)signalStrengthBars;
+-(BOOL)wiFiEnabled;
 
 @end
