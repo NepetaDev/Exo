@@ -181,8 +181,10 @@ void updateChargingStatus(CFNotificationCenterRef center, void *o, CFStringRef n
 
 -(void)_updateCurrentNetwork {
     %orig;
+    NSString *name = [self currentNetworkName];
+    if (!name) name = @"";
     [[EXOObserver sharedInstance] update:@{
-        @"wifi.network": [self currentNetworkName],
+        @"wifi.network": name,
     }];
 }
 
@@ -206,6 +208,7 @@ void updateChargingStatus(CFNotificationCenterRef center, void *o, CFStringRef n
 %hook SBTelephonyManager
 
 -(void)_setSignalStrengthBars:(unsigned long long)arg1 maxBars:(unsigned long long)arg2 inSubscriptionContext:(id)arg3 {
+    %orig;
     [[EXOObserver sharedInstance] update:@{
         @"mobile.strength.current": @(arg1),
         @"mobile.strength.max": @(arg2)
@@ -213,6 +216,7 @@ void updateChargingStatus(CFNotificationCenterRef center, void *o, CFStringRef n
 }
 
 -(void)_setSignalStrengthBars:(unsigned long long)arg1 maxBars:(unsigned long long)arg2 {
+    %orig;
     [[EXOObserver sharedInstance] update:@{
         @"mobile.strength.current": @(arg1),
         @"mobile.strength.max": @(arg2)
@@ -220,24 +224,28 @@ void updateChargingStatus(CFNotificationCenterRef center, void *o, CFStringRef n
 }
 
 -(void)_setOperatorName:(NSString *)arg1 inSubscriptionContext:(id)arg2 {
+    %orig;
     [[EXOObserver sharedInstance] update:@{
         @"mobile.network": arg1 ?: @""
     }];
 }
 
 -(void)_setOperatorName:(NSString *)arg1 {
+    %orig;
     [[EXOObserver sharedInstance] update:@{
         @"mobile.network": arg1 ?: @""
     }];
 }
 
 -(void)_reallySetOperatorName:(NSString *)arg1 {
+    %orig;
     [[EXOObserver sharedInstance] update:@{
         @"mobile.network": arg1 ?: @""
     }];
 }
 
 -(void)setOperatorName:(NSString *)arg1 {
+    %orig;
     [[EXOObserver sharedInstance] update:@{
         @"mobile.network": arg1 ?: @""
     }];
