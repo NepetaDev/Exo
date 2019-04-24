@@ -2,9 +2,15 @@ window.onload = () => {
     // Make sure to disable double tap zoom.
     var meta = document.createElement('meta');
     meta.name = 'viewport';
-    meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+    meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no';
+
+    var style = document.createElement('style');
+    style.type = 'text/css';
+    style.innerText = '* { -webkit-user-select: none; -webkit-touch-callout: none; }';
+
     var head = document.getElementsByTagName('head')[0];
     head.appendChild(meta);
+    head.appendChild(style);
 
     window.exo.init();
 }
