@@ -73,7 +73,8 @@ window.exo = (() => {
 
     function updateGeneratedData() {
         exo._update({
-            'time': new Date().toLocaleTimeString()
+            'time': new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            'time.withSeconds': new Date().toLocaleTimeString()
         });
     }
     
