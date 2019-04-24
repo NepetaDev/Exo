@@ -181,10 +181,8 @@ void updateChargingStatus(CFNotificationCenterRef center, void *o, CFStringRef n
 
 -(void)_updateCurrentNetwork {
     %orig;
-    NSString *name = [self currentNetworkName];
-    if (!name) name = @"";
     [[EXOObserver sharedInstance] update:@{
-        @"wifi.network": name,
+        @"wifi.network": [self currentNetworkName] ?: "",
     }];
 }
 
