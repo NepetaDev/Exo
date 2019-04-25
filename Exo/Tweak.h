@@ -1,5 +1,12 @@
+@interface SBApplication : NSObject
+
+@property (nonatomic,readonly) NSString * bundleIdentifier;
+
+@end
+
 @interface SBMediaController : NSObject
 
+@property (nonatomic,readonly) SBApplication * nowPlayingApplication;
 -(id)_nowPlayingInfo;
 
 @end

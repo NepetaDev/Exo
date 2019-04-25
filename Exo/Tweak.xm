@@ -46,6 +46,7 @@
     dispatch_once(&onceToken, ^{
         sharedInstance = [EXOObserver alloc];
         sharedInstance.data = [NSMutableDictionary new];
+        sharedInstance.data[@"media.playing"] = @(false);
         [sharedInstance once];
     });
     return sharedInstance;
@@ -285,6 +286,11 @@ bool wifiInitialized = false;
 
         if (dict) {
             NSMutableDictionary *updateData = [NSMutableDictionary new];
+
+            if ([self nowPlayingApplication]) {
+                updateData[@"media.application"] = [[self nowPlayingApplication] bundleIdentifier];
+            }
+
             if (dict[(__bridge NSString *)kMRMediaRemoteNowPlayingInfoPlaybackRate]) {
                 updateData[@"media.playing"] = @([dict[(__bridge NSString *)kMRMediaRemoteNowPlayingInfoPlaybackRate] intValue] > 0);
             }
