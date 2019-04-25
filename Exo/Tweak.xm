@@ -244,8 +244,8 @@ bool wifiInitialized = false;
         self.exoLastDigest = [self.currentNowPlayingArtworkDigest copy];
         UIImage *image = [[self currentNowPlayingArtwork] copy];
         if (image) {
-            NSData *imageData = UIImagePNGRepresentation(image);
-            data = [NSString stringWithFormat:@"data:image/png;base64,%@", [imageData base64EncodedStringWithOptions:NSDataBase64Encoding64CharacterLineLength]];
+            NSData *imageData = UIImageJPEGRepresentation(image, 0.9);
+            data = [NSString stringWithFormat:@"data:image/jpeg;base64,%@", [imageData base64EncodedStringWithOptions:NSDataBase64Encoding64CharacterLineLength]];
         }
     }
 
