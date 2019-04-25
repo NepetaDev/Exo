@@ -11,6 +11,18 @@
 
 @end
 
+@interface MPUNowPlayingController : UIImageView
+
+@property (nonatomic, retain) NSString *exoLastDigest;
+@property (nonatomic, readonly) NSString *currentNowPlayingArtworkDigest;
+@property (nonatomic) bool shouldUpdateNowPlayingArtwork;
+@property (nonatomic, readonly) double currentDuration;
+@property (nonatomic, readonly) double currentElapsed;
+
+- (UIImage*)currentNowPlayingArtwork;
+
+@end
+
 @interface SBUIController : NSObject
 
 +(instancetype)sharedInstanceIfExists;

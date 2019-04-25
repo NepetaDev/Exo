@@ -229,6 +229,33 @@ bool wifiInitialized = false;
 
 %end
 
+%hook MPUNowPlayingController
+
+%property (nonatomic, retain) NSString *exoLastDigest;
+
+- (void)_updateTimeInformationAndCallDelegate:(bool)arg1 {
+    %orig;
+
+    NSString *data = @"";
+
+    if (self.shouldUpdateNowPlayingArtwork) {
+        if ([self.currentNowPlayingArtworkDigest isEqualToString:self.exoLastDigest]) return;
+
+        self.exoLastDigest = [self.currentNowPlayingArtworkDigest copy];
+        UIImage *image = [[self currentNowPlayingArtwork] copy];
+        if (image) {
+            NSData *imageData = UIImagePNGRepresentation(image);
+            data = [NSString stringWithFormat:@"data:image/png;base64,%@", [imageData base64EncodedStringWithOptions:NSDataBase64Encoding64CharacterLineLength]];
+        }
+    }
+
+    [[EXOObserver sharedInstance] update:@{
+        @"media.image": data
+    }];
+}
+
+%end
+
 %hook SBTelephonyManager
 
 -(void)_setSignalStrengthBars:(unsigned long long)arg1 maxBars:(unsigned long long)arg2 inSubscriptionContext:(id)arg3 {
