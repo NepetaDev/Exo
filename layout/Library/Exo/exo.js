@@ -21,6 +21,7 @@ window.exo = (() => {
     let boundFunctions = {};
     let eventHandlers = {};
     let filters = {};
+    let actions = {};
     let options = {
         'autobind': true
     };
@@ -219,8 +220,13 @@ window.exo = (() => {
     };
 
     exo.action = (action) => {
-        if (!action || !window['webkit']) return;
+        if (!action) return;
+        let name = action;
+        if (typeof name === "object") name = action['action'];
 
+        if (actions[name]) return actions[name](action);
+        if (!window['webkit']) return;
+        
         if (typeof action === "object" || typeof action === "string") {
             webkit.messageHandlers.action.postMessage(action);
         }
@@ -232,6 +238,10 @@ window.exo = (() => {
 
     exo.setOption = (name, value) => {
         options[name] = value;
+    };
+
+    exo.setAction = (name, value) => {
+        actions[name] = value;
     };
 
     exo.get = (name, skipFilters) => {
