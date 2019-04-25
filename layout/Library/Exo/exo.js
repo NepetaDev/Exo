@@ -33,27 +33,36 @@ window.exo = (() => {
         }
     }
 
+    function bindElementEventHandler(element, property, data) {
+        data = data.trim();
+        let parsed = data;
+        if (data.startsWith("{")) parsed = eval(data);
+        element[property.toLowerCase()] = function () {
+            exo.action(parsed);
+        };
+    }
+
+    function createClassFunction(element, property, format) {
+        return () => {
+            let className = property.replace("@class.", "");
+            if (format.startsWith("!")) {
+                if (!getValue(format.slice(1))) {
+                    element.classList.add(className);
+                } else {
+                    element.classList.remove(className);
+                }
+            } else {
+                if (getValue(format)) {
+                    element.classList.add(className);
+                } else {
+                    element.classList.remove(className);
+                }
+            }
+        };
+    }
+
     function createContentFunction(element, property, format, variables) {
         return () => {
-            if (property.startsWith("@class")) {
-                let className = property.replace("@class.", "");
-                if (format.startsWith("!")) {
-                    if (!getValue(format.slice(1))) {
-                        element.classList.add(className);
-                    } else {
-                        element.classList.remove(className);
-                    }
-                } else {
-                    if (getValue(format)) {
-                        element.classList.add(className);
-                    } else {
-                        element.classList.remove(className);
-                    }
-                }
-
-                return;
-            }
-
             let content = format;
 
             for (let variable of variables) {
@@ -80,7 +89,7 @@ window.exo = (() => {
     
     function addTo(object, element, variables) {
         for (let variable of variables) {
-            let key = variable.slice(1,-1);
+            let key = variable.replace("{", "").replace("}", "");
             if (!object[key]) {
                 object[key] = [element];
             } else {
@@ -125,11 +134,20 @@ window.exo = (() => {
                 for (let attribute of element.attributes) {
                     if (!attribute.name.startsWith("@")) continue;
 
-                    let variables = [];
-                    if (!attribute.name.startsWith("@class.")) {
-                        variables = attribute.value.match(formatRe);
-                        if (!variables || variables.length == 0) continue;
+                    if (attribute.name.startsWith("@on")) {
+                        bindElementEventHandler(element, attribute.name.substring(1), attribute.value);
+                        continue;
                     }
+
+                    if (attribute.name.startsWith("@class.")) {
+                      let fn = createClassFunction(element, attribute.name, attribute.value);
+                      addTo(boundFunctions, fn, [attribute.value.replace("!", "")]);
+                      fn();
+                      continue;
+                    }
+
+                    let variables = attribute.value.match(formatRe);
+                    if (!variables || variables.length == 0) continue;
                     
                     let fn = createContentFunction(element, attribute.name, attribute.value, variables);
                     addTo(boundFunctions, fn, variables);
