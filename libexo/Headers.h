@@ -2,6 +2,12 @@
 - (bool)openApplicationWithBundleID:(id)arg1;
 @end
 
+@interface SpringBoard : UIApplication
+
+-(void)launchApplicationWithIdentifier:(NSString *)bundle suspended:(BOOL)suspended;
+
+@end
+
 typedef enum {
     /*
         * Use nil for userInfo.

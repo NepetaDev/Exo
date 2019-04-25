@@ -14,9 +14,3 @@
 -(void)exoAction:(NSString *)action withArguments:(NSDictionary *)arguments;
 
 @end
-
-@interface SpringBoard : UIApplication
-
--(void)launchApplicationWithIdentifier:(NSString *)bundle suspended:(BOOL)suspended;
-
-@end
