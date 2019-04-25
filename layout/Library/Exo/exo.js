@@ -36,7 +36,7 @@ window.exo = (() => {
     function bindElementEventHandler(element, property, data) {
         data = data.trim();
         let parsed = data;
-        if (data.startsWith("{")) parsed = eval(data);
+        if (data.startsWith("{")) parsed = eval("(" + data + ")");
         element[property.toLowerCase()] = function () {
             exo.action(parsed);
         };

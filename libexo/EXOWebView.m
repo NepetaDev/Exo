@@ -113,6 +113,11 @@ typedef enum {
                 }
             });
         }
+    } else if ([action isEqualToString:@"open.url"]) {
+        if (arguments && arguments[@"url"] && [arguments[@"url"] isKindOfClass:[NSString class]] &&
+                [[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:arguments[@"url"]]]){
+            [[UIApplication sharedApplication] openURL:[NSURL URLWithString:arguments[@"url"]] options:@{} completionHandler:nil];
+        }
     }
 }
 
