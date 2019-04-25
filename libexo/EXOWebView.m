@@ -1,37 +1,7 @@
 #import <Foundation/NSDistributedNotificationCenter.h>
 #import <MediaRemote/MediaRemote.h>
 #import "public/EXOWebView.h"
-
-typedef enum {
-    /*
-        * Use nil for userInfo.
-        */
-    kMRPlay = 0,
-    kMRPause = 1,
-    kMRTogglePlayPause = 2,
-    kMRStop = 3,
-    kMRNextTrack = 4,
-    kMRPreviousTrack = 5,
-    kMRToggleShuffle = 6,
-    kMRToggleRepeat = 7,
-    kMRStartForwardSeek = 8,
-    kMREndForwardSeek = 9,
-    kMRStartBackwardSeek = 10,
-    kMREndBackwardSeek = 11,
-    kMRGoBackFifteenSeconds = 12,
-    kMRSkipFifteenSeconds = 13,
-
-    /*
-        * Use a NSDictionary for userInfo, which contains three keys:
-        * kMRMediaRemoteOptionTrackID
-        * kMRMediaRemoteOptionStationID
-        * kMRMediaRemoteOptionStationHash
-        */
-    kMRLikeTrack = 0x6A,
-    kMRBanTrack = 0x6B,
-    kMRAddTrackToWishList = 0x6C,
-    kMRRemoveTrackFromWishList = 0x6D
-} MRCommand;
+#import "Headers.h"
 
 @implementation EXOWebView 
 
@@ -113,10 +83,23 @@ typedef enum {
                 }
             });
         }
-    } else if ([action isEqualToString:@"open.url"]) {
-        if (arguments && arguments[@"url"] && [arguments[@"url"] isKindOfClass:[NSString class]] &&
-                [[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:arguments[@"url"]]]){
-            [[UIApplication sharedApplication] openURL:[NSURL URLWithString:arguments[@"url"]] options:@{} completionHandler:nil];
+    } else if ([action hasPrefix:@"open."]) {
+        if ([action isEqualToString:@"open.url"]) {
+            if (arguments && arguments[@"url"] && [arguments[@"url"] isKindOfClass:[NSString class]] &&
+                    [[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:arguments[@"url"]]]){
+                [[UIApplication sharedApplication] openURL:[NSURL URLWithString:arguments[@"url"]] options:@{} completionHandler:nil];
+            }
+        } else if ([action isEqualToString:@"open.application"]) {
+            if (arguments && arguments[@"bundle"] && [arguments[@"bundle"] isKindOfClass:[NSString class]]){
+                UIApplication *shared = [UIApplication sharedApplication];
+                
+                if ([shared isKindOfClass:NSClassFromString(@"SpringBoard")]) {
+                    [(SpringBoard*)shared launchApplicationWithIdentifier:arguments[@"bundle"] suspended:NO];
+                } else {
+                    LSApplicationWorkspace* workspace = [NSClassFromString(@"LSApplicationWorkspace") new];
+                    [workspace openApplicationWithBundleID:arguments[@"bundle"]];
+                }
+            }
         }
     }
 }
