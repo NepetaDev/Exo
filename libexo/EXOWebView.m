@@ -1,5 +1,37 @@
 #import <Foundation/NSDistributedNotificationCenter.h>
+#import <MediaRemote/MediaRemote.h>
 #import "public/EXOWebView.h"
+
+typedef enum {
+    /*
+        * Use nil for userInfo.
+        */
+    kMRPlay = 0,
+    kMRPause = 1,
+    kMRTogglePlayPause = 2,
+    kMRStop = 3,
+    kMRNextTrack = 4,
+    kMRPreviousTrack = 5,
+    kMRToggleShuffle = 6,
+    kMRToggleRepeat = 7,
+    kMRStartForwardSeek = 8,
+    kMREndForwardSeek = 9,
+    kMRStartBackwardSeek = 10,
+    kMREndBackwardSeek = 11,
+    kMRGoBackFifteenSeconds = 12,
+    kMRSkipFifteenSeconds = 13,
+
+    /*
+        * Use a NSDictionary for userInfo, which contains three keys:
+        * kMRMediaRemoteOptionTrackID
+        * kMRMediaRemoteOptionStationID
+        * kMRMediaRemoteOptionStationHash
+        */
+    kMRLikeTrack = 0x6A,
+    kMRBanTrack = 0x6B,
+    kMRAddTrackToWishList = 0x6C,
+    kMRRemoveTrackFromWishList = 0x6D
+} MRCommand;
 
 @implementation EXOWebView 
 
@@ -55,6 +87,31 @@
     } else if ([action isEqualToString:@"log"]) {
         if (arguments && arguments[@"message"] && [arguments[@"message"] isKindOfClass:[NSString class]]) {
             NSLog(@"[Exo] [EXTERNAL LOG] %@", arguments[@"message"]);
+        }
+    } else if ([action hasPrefix:@"media."]) {
+        if ([action isEqualToString:@"media.play"]) {
+            MRMediaRemoteSendCommand((MRMediaRemoteCommand)kMRPlay, nil);
+        } else if ([action isEqualToString:@"media.pause"]) {
+            MRMediaRemoteSendCommand((MRMediaRemoteCommand)kMRPause, nil);
+        } else if ([action isEqualToString:@"media.stop"]) {
+            MRMediaRemoteSendCommand((MRMediaRemoteCommand)kMRStop, nil);
+        } else if ([action isEqualToString:@"media.next"]) {
+            MRMediaRemoteSendCommand((MRMediaRemoteCommand)kMRNextTrack, nil);
+        } else if ([action isEqualToString:@"media.previous"]) {
+            MRMediaRemoteSendCommand((MRMediaRemoteCommand)kMRPreviousTrack, nil);
+        } else if ([action isEqualToString:@"media.togglePlayback"]) {
+            MRMediaRemoteGetNowPlayingInfo(dispatch_get_main_queue(), ^(CFDictionaryRef information) {
+                NSDictionary *dict = (__bridge NSDictionary *)information;
+                if (dict) {
+                    if (dict[(__bridge NSString *)kMRMediaRemoteNowPlayingInfoPlaybackRate]) {
+                        if ([dict[(__bridge NSString *)kMRMediaRemoteNowPlayingInfoPlaybackRate] intValue] > 0) {
+                            MRMediaRemoteSendCommand((MRMediaRemoteCommand)kMRPause, nil);
+                        } else {
+                            MRMediaRemoteSendCommand((MRMediaRemoteCommand)kMRPlay, nil);
+                        }
+                    }
+                }
+            });
         }
     }
 }
