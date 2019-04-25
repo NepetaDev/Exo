@@ -60,24 +60,24 @@
         }
     } else if ([action hasPrefix:@"media."]) {
         if ([action isEqualToString:@"media.play"]) {
-            MRMediaRemoteSendCommand((MRMediaRemoteCommand)kMRPlay, nil);
+            MRMediaRemoteSendCommand(MRMediaRemoteCommandPlay, nil);
         } else if ([action isEqualToString:@"media.pause"]) {
-            MRMediaRemoteSendCommand((MRMediaRemoteCommand)kMRPause, nil);
+            MRMediaRemoteSendCommand(MRMediaRemoteCommandPause, nil);
         } else if ([action isEqualToString:@"media.stop"]) {
-            MRMediaRemoteSendCommand((MRMediaRemoteCommand)kMRStop, nil);
+            MRMediaRemoteSendCommand(MRMediaRemoteCommandStop, nil);
         } else if ([action isEqualToString:@"media.next"]) {
-            MRMediaRemoteSendCommand((MRMediaRemoteCommand)kMRNextTrack, nil);
+            MRMediaRemoteSendCommand(MRMediaRemoteCommandNextTrack, nil);
         } else if ([action isEqualToString:@"media.previous"]) {
-            MRMediaRemoteSendCommand((MRMediaRemoteCommand)kMRPreviousTrack, nil);
+            MRMediaRemoteSendCommand(MRMediaRemoteCommandPreviousTrack, nil);
         } else if ([action isEqualToString:@"media.togglePlayback"]) {
             MRMediaRemoteGetNowPlayingInfo(dispatch_get_main_queue(), ^(CFDictionaryRef information) {
                 NSDictionary *dict = (__bridge NSDictionary *)information;
                 if (dict) {
                     if (dict[(__bridge NSString *)kMRMediaRemoteNowPlayingInfoPlaybackRate]) {
                         if ([dict[(__bridge NSString *)kMRMediaRemoteNowPlayingInfoPlaybackRate] intValue] > 0) {
-                            MRMediaRemoteSendCommand((MRMediaRemoteCommand)kMRPause, nil);
+                            MRMediaRemoteSendCommand(MRMediaRemoteCommandPause, nil);
                         } else {
-                            MRMediaRemoteSendCommand((MRMediaRemoteCommand)kMRPlay, nil);
+                            MRMediaRemoteSendCommand(MRMediaRemoteCommandPlay, nil);
                         }
                     }
                 }
@@ -92,7 +92,7 @@
         } else if ([action isEqualToString:@"open.application"]) {
             if (arguments && arguments[@"bundle"] && [arguments[@"bundle"] isKindOfClass:[NSString class]]){
                 UIApplication *shared = [UIApplication sharedApplication];
-                
+
                 if ([shared isKindOfClass:NSClassFromString(@"SpringBoard")]) {
                     [(SpringBoard*)shared launchApplicationWithIdentifier:arguments[@"bundle"] suspended:NO];
                 } else {
