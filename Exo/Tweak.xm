@@ -243,10 +243,10 @@
         NSMutableArray *array = [NSMutableArray new];
         for (WAHourlyForecast *forecast in [city hourlyForecasts]) {
             [array addObject:@{
-                @"time": [forecast time],
+                @"time": [forecast time] ?: @"",
                 @"conditionCode": @([forecast conditionCode]),
                 @"percentPrecipitation": @([forecast percentPrecipitation]),
-                @"detail": [forecast forecastDetail],
+                @"detail": [forecast forecastDetail] ?: @"",
                 @"temperature": useCelsius ? @([[forecast temperature] celsius]) : @([[forecast temperature] fahrenheit]),
             }];
         }
