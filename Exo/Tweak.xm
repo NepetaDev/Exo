@@ -31,6 +31,7 @@
 -(void)updateBattery;
 -(void)updateMemory;
 -(void)updateDevice;
+-(void)updateWeather;
 //...
 
 @end
@@ -107,7 +108,7 @@
 }
 
 -(void)every10Minutes {
-
+    [self updateWeather];
 }
 
 /* Update stuff */
@@ -163,6 +164,28 @@
         @"device.type": type,
         @"device.name": [[UIDevice currentDevice] name],
         @"system.version": [UIDevice currentDevice].systemVersion
+    }];
+}
+
+-(void)updateWeather {
+    if (!%c(WeatherPreferences)) return;
+
+    WeatherPreferences *weatherPrefs = [%c(WeatherPreferences) sharedPreferences];
+    NSArray *savedCities = [weatherPrefs loadSavedCities];
+    NSArray *defaultCities = [weatherPrefs _defaultCities];
+    
+    City *city;
+    if (savedCities && [savedCities count] > 0) city = savedCities[0];
+    if (!city && defaultCities && [defaultCities count] > 0) city = defaultCities[0];
+    if (!city) return;
+
+    WFTemperature *temperature = [city temperature];
+    WFTemperature *feelsLike = [city feelsLike];
+    [self update:@{
+        @"weather.city.name": [city name],
+        @"weather.temperature.current": [weatherPrefs isCelsius] ? @([temperature celsius]) : @([temperature fahrenheit]),
+        @"weather.temperature.feelsLike": [weatherPrefs isCelsius] ? @([feelsLike celsius]) : @([feelsLike fahrenheit]),
+        @"weather.temperature.unit": [weatherPrefs isCelsius] ? @"C" : @"F"
     }];
 }
 
