@@ -8,9 +8,16 @@ window.onload = () => {
     style.type = 'text/css';
     style.innerText = '* { -webkit-user-select: none; -webkit-touch-callout: none; }';
 
+    var oledBurnInProtectionCss = document.createElement('style');
+    oledBurnInProtectionCss.id = 'oledBurnInProtectionCss';
+    oledBurnInProtectionCss.type = 'text/css';
+    oledBurnInProtectionCss.innerText = '.anti-burnin { animation: antiBurninV 60s linear infinite; padding-top: 0; }';
+    oledBurnInProtectionCss.innerText += '@keyframes antiBurninV { 0%, 100% { padding-top: -10px; } 50% { padding-top: 10px; } }';
+
     var head = document.getElementsByTagName('head')[0];
     head.appendChild(meta);
     head.appendChild(style);
+    head.appendChild(oledBurnInProtectionCss);
 
     window.exo.init();
 }
