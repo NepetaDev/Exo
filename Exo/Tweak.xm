@@ -48,6 +48,7 @@
         sharedInstance = [EXOObserver alloc];
         sharedInstance.data = [NSMutableDictionary new];
         sharedInstance.data[@"media.playing"] = @(false);
+        sharedInstance.data[@"weather.available"] = @(false);
         [sharedInstance once];
     });
     return sharedInstance;
@@ -173,20 +174,87 @@
     WeatherPreferences *weatherPrefs = [%c(WeatherPreferences) sharedPreferences];
     NSArray *savedCities = [weatherPrefs loadSavedCities];
     NSArray *defaultCities = [weatherPrefs _defaultCities];
-    
+
     City *city;
     if (savedCities && [savedCities count] > 0) city = savedCities[0];
     if (!city && defaultCities && [defaultCities count] > 0) city = defaultCities[0];
     if (!city) return;
 
+    BOOL useCelsius = [weatherPrefs isCelsius];
     WFTemperature *temperature = [city temperature];
     WFTemperature *feelsLike = [city feelsLike];
-    [self update:@{
-        @"weather.city.name": [city name],
-        @"weather.temperature.current": [weatherPrefs isCelsius] ? @([temperature celsius]) : @([temperature fahrenheit]),
-        @"weather.temperature.feelsLike": [weatherPrefs isCelsius] ? @([feelsLike celsius]) : @([feelsLike fahrenheit]),
-        @"weather.temperature.unit": [weatherPrefs isCelsius] ? @"C" : @"F"
-    }];
+    WFLocation *location = [city wfLocation];
+    NSMutableDictionary *weatherInfo = [@{
+        @"weather.available": @(true),
+        @"weather.city.name": [city name] ?: @"",
+        @"weather.city.county": [location county] ?: @"",
+        @"weather.city.state": [location state] ?: @"",
+        @"weather.city.stateAbbreviation": [location stateAbbreviation] ?: @"",
+        @"weather.city.country": [location county] ?: @"",
+        @"weather.city.countryAbbreviation": [location countryAbbreviation] ?: @"",
+        @"weather.windChill": @([city windChill]),
+        @"weather.windDirection": @([city windDirection]),
+        @"weather.windSpeed": @([city windSpeed]),
+        @"weather.humidity": @([city humidity]),
+        @"weather.visibility": @([city visibility]),
+        @"weather.pressure": @([city pressure]),
+        @"weather.dewPoint": @([city dewPoint]),
+        @"weather.heatIndex": @([city heatIndex]),
+        @"weather.precipitationPast24Hours": @([city precipitationPast24Hours]),
+        @"weather.uvIndex": @([city uvIndex]),
+        @"weather.conditionCode": @([city conditionCode]),
+        @"weather.condition": [city naturalLanguageDescription],
+        @"weather.sunsetTime": @([city sunsetTime]),
+        @"weather.sunriseTime": @([city sunriseTime]),
+        @"weather.moonPhase": @([city moonPhase]),
+        @"weather.temperature.current": useCelsius ? @([temperature celsius]) : @([temperature fahrenheit]),
+        @"weather.temperature.feelsLike": useCelsius ? @([feelsLike celsius]) : @([feelsLike fahrenheit]),
+        @"weather.temperature.unit": useCelsius ? @"C" : @"F"
+    } mutableCopy];
+
+    WAHourlyForecast *currentHourlyForecast = ([city hourlyForecasts] && [[city hourlyForecasts] count] > 0) ? [city hourlyForecasts][0] : nil;
+    WADayForecast *currentDayForecast = ([city dayForecasts] && [[city dayForecasts] count] > 0) ? [city dayForecasts][0] : nil;
+
+    if (currentDayForecast) {
+        weatherInfo[@"weather.temperature.high"] = useCelsius ? @([[currentDayForecast high] celsius]) : @([[currentDayForecast high] fahrenheit]);
+        weatherInfo[@"weather.temperature.low"] = useCelsius ? @([[currentDayForecast low] celsius]) : @([[currentDayForecast low] fahrenheit]);
+    }
+
+    if (currentHourlyForecast) {
+        weatherInfo[@"weather.chanceOfRain"] = @([currentHourlyForecast percentPrecipitation]);
+    }
+
+    if ([city dayForecasts] && [[city dayForecasts] count] > 0) {
+        NSMutableArray *array = [NSMutableArray new];
+        for (WADayForecast *forecast in [city dayForecasts]) {
+            [array addObject:@{
+                @"day": @([forecast dayNumber]),
+                @"dayOfTheWeek": @([forecast dayOfWeek]),
+                @"icon": @([forecast icon]),
+                @"temperature.high": useCelsius ? @([[forecast high] celsius]) : @([[forecast high] fahrenheit]),
+                @"temperature.low": useCelsius ? @([[forecast low] celsius]) : @([[forecast low] fahrenheit]),
+            }];
+        }
+
+        weatherInfo[@"weather.dayForecasts"] = array;
+    }
+
+    if ([city hourlyForecasts] && [[city hourlyForecasts] count] > 0) {
+        NSMutableArray *array = [NSMutableArray new];
+        for (WAHourlyForecast *forecast in [city hourlyForecasts]) {
+            [array addObject:@{
+                @"time": [forecast time],
+                @"conditionCode": @([forecast conditionCode]),
+                @"percentPrecipitation": @([forecast percentPrecipitation]),
+                @"detail": [forecast forecastDetail],
+                @"temperature": useCelsius ? @([[forecast temperature] celsius]) : @([[forecast temperature] fahrenheit]),
+            }];
+        }
+
+        weatherInfo[@"weather.hourlyForecasts"] = array;
+    }
+
+    [self update:weatherInfo];
 }
 
 @end
