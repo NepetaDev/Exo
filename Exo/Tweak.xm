@@ -265,7 +265,7 @@ void dataRequested() {
 
 void updateChargingStatus(CFNotificationCenterRef center, void *o, CFStringRef name, id object, NSDictionary *userInfo) {
     [[EXOObserver sharedInstance] update:@{
-        @"battery.charging": userInfo[@"IsCharging"]
+        @"battery.charging": userInfo[@"IsCharging"] ?: @(false)
     }];
 }
 
