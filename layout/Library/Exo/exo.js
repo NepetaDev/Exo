@@ -200,7 +200,7 @@ window.exo = (() => {
                       continue;
                     }
 
-                    if(attribute.name.startsWith("@css.")) {
+                    if (attribute.name.startsWith("@css.")) {
 	                    let fn = createStyleFunction(element, attribute.name, attribute.value);
 	                    addTo(boundFunctions, fn, [attribute.value]);
 	                    fn();
