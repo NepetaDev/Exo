@@ -23,21 +23,37 @@ window.onload = () => {
 }
 
 window.exo = (() => {
-    let formatRe = /{([\w\.]+)}/g;
+    let formatRe = /{([\w\.]+:?([\w\,]+)?)}/g; // second part of the regexp is meant to match an optional modifier or multiple modifiers
     let currentData = {};
     let boundFunctions = {};
     let eventHandlers = {};
     let filters = {};
     let actions = {};
+    let modifiers = {};
     let options = {
         'autobind': true
     };
 
-    function getValue(name) {
+    function applyMods(val, mods) {
+        if(!Array.isArray(mods) || mods.length === 0) return val; // no modifiers, return original value
+
+        let _val = val; // clone
+        for(let modName of mods) {
+            if(modifiers[modName]) { //  skip if modifier not found
+                _val = modifiers[modName](_val);
+            }
+        }
+        return _val;
+    }
+
+    function getValue(name, mods) {
+        let val = currentData[name];
+        val = applyMods(val, mods);
+
         if (filters[name]) {
-            return filters[name](currentData[name]);
+            return filters[name](val);
         } else {
-            return currentData[name];
+            return val;
         }
     }
 
@@ -45,22 +61,35 @@ window.exo = (() => {
         data = data.trim();
         let parsed = data;
         if (data.startsWith("{")) parsed = eval("(" + data + ")");
-        element[property.toLowerCase()] = function () {
-            exo.action(parsed);
-        };
+        element.addEventListener(property.toLowerCase().replace("on", ""), () => exo.action(parsed));
+    }
+
+    function createStyleFunction(element, property, format) {
+    	let [cssPropName, mods] = property.replace("@css.", "").split(":"); // @css is less intuitive then @style but style is a possible element attribute...
+    	if(mods) {
+    		mods = mods.split(',');
+    	}
+
+    	return () => {
+    		element.style[cssPropName] = getValue(format, mods);
+    	};
     }
 
     function createClassFunction(element, property, format) {
+        let [className, mods] = property.replace("@class.", "").split(":"); // first value of array will be the className and second value (optional) will be a comma seperated list of modifiers
+        if(mods) {
+        	mods = mods.split(',');
+        }
+
         return () => {
-            let className = property.replace("@class.", "");
             if (format.startsWith("!")) {
-                if (!getValue(format.slice(1))) {
+                if (!getValue(format.slice(1), mods)) {
                     element.classList.add(className);
                 } else {
                     element.classList.remove(className);
                 }
             } else {
-                if (getValue(format)) {
+                if (getValue(format, mods)) {
                     element.classList.add(className);
                 } else {
                     element.classList.remove(className);
@@ -74,8 +103,14 @@ window.exo = (() => {
             let content = format;
 
             for (let variable of variables) {
-                let value = getValue(variable.slice(1,-1));
-                if (typeof value == 'undefined' || value == null) value = "";
+                let [varName, mods] = variable.slice(1,-1).split(":") // first value of array will be the variable and second value (optional) will be a comma seperated list of modifiers
+                if(mods) {
+                    mods = mods.split(","); // extract a list of modifiers to apply
+                    // even if the var is somethings like this: {system.version:} it will work since applyMods() will verify mods is an array
+                }
+
+                let value = getValue(varName, mods);
+                if (typeof value == 'undefined' || value == null) value = "no";
 
                 content = content.split(variable).join(value);
             }
@@ -93,6 +128,17 @@ window.exo = (() => {
             'time': new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             'time.withSeconds': new Date().toLocaleTimeString()
         });
+    }
+
+    function stripModifiersFromContent(arr) {
+    	// we need addTo() to support content binding with modifiers
+    	return arr.map((item) => {
+    		const stripped = item
+    			.slice(1,-1) // remove '{' and '}'
+    			.split(':')[0] // remove everything beyond ':' if it exists
+
+    		return '{' + stripped + '}'; // we need to re-add {} to make it work with addTo()
+    	}); // strip modifiers from value
     }
     
     function addTo(object, element, variables) {
@@ -154,11 +200,18 @@ window.exo = (() => {
                       continue;
                     }
 
+                    if(attribute.name.startsWith("@css.")) {
+	                    let fn = createStyleFunction(element, attribute.name, attribute.value);
+	                    addTo(boundFunctions, fn, [attribute.value]);
+	                    fn();
+	                    continue;	
+                    }
+
                     let variables = attribute.value.match(formatRe);
                     if (!variables || variables.length == 0) continue;
                     
                     let fn = createContentFunction(element, attribute.name, attribute.value, variables);
-                    addTo(boundFunctions, fn, variables);
+                    addTo(boundFunctions, fn, stripModifiersFromContent(variables));
                     fn();
                 }
 
@@ -173,7 +226,7 @@ window.exo = (() => {
 
                     if (!element.exo) element.exo = {};
                     let fn = createContentFunction(textNode, 'nodeValue', textNode.nodeValue, variables);
-                    addTo(boundFunctions, fn, variables);
+                    addTo(boundFunctions, fn, stripModifiersFromContent(variables));
                     fn();
                 }
             }
@@ -276,6 +329,10 @@ window.exo = (() => {
         if (options['autobind']) {
             exo('body *').autobind();
         }
+    };
+
+    exo.setModifier = (name, value) => {
+        modifiers[name] = value;
     };
 
     updateGeneratedData();
